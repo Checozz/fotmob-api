@@ -13,14 +13,18 @@ class FotmobAPI:
     ):
 
         self.base = "www.fotmob.com"
-        self.base_api = "/api/"
+        self.base_api = "/api/data/"
         self.rate_limiter = ratelimiter.RateLimiter(
             max_calls=requests_per_sec, period=1
         )
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+        })
 
     # Loaders
     def _url(self, *route):
-        return "https://{base}/{route}/".format(
+        return "https://{base}{route}".format(
             base=self.base + self.base_api, route="/".join(str(r) for r in route)
         )
 
@@ -34,7 +38,7 @@ class FotmobAPI:
                 params[param] = json.dumps(val)  # So that True -> 'true'
 
         with self.rate_limiter:
-            r = requests.get(self._url(*route), params=params)
+            r = self.session.get(self._url(*route), params=params)
 
         return self._parse_response(r)
 
